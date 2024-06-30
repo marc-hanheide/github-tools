@@ -105,9 +105,6 @@ if __name__ == "__main__":
     ]
     group = "wagriciss"
     org = "LCAS"
-    #invite_user.add_user_to_repo("strands-jenkins", org, repositories, group)
-    #invite_user.add_user_to_repo("lcas-uol", org, repositories, group)
-    #invite_user.add_user_to_repo("racheltrimble", org, repositories, group)
     with open("users.csv", "r") as csv_file:
         reader =DictReader(csv_file)
         for row in reader:
