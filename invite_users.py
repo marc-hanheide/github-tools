@@ -74,19 +74,31 @@ class InviteUser:
         except GithubException as e:
             return False
     
-    def add_user_to_repo(self, user_name, orga_name="LCAS", repo_names="Getting-Started", team_name="wagriciss"):
-        org = self.get_org(orga_name)
+    def add_user_to_repo(self, user_name, orga_name="LCAS", repo_names=["Getting-Started"], team_name="wagriciss"):
         user = self.g.get_user(user_name)
-        team = org.get_team_by_slug(team_name)
+        org = self.get_org(orga_name)
         if self.is_member(user):
-            print("adding %s member %s to team %s" % (orga_name, user_name, team_name))
+            team = org.get_team_by_slug(team_name)
+            print("  adding %s member %s to team %s" % (orga_name, user_name, team_name))
             team.add_membership(user, role="member")
         else:
             print("user %s is not a member of org %s, so adding as collaborator" % (user_name, orga_name))
             for repo_name in repo_names:
-                print("  adding %s as collaborator to repository %s" % (user_name, repo_name))
+                print("  checking to add %s as collaborator to repository %s" % (user_name, repo_name))
                 repo = org.get_repo(repo_name)
-                repo.add_to_collaborators(user, permission="maintain")
+                if repo.has_in_collaborators(user):
+                    print("  %s is already a collaborator" % user_name)
+                else:
+                    invited = repo.get_pending_invitations()
+                    for i in invited:
+                        if i.invitee.login == user_name:
+                            print("  %s has already been invited, removing invitiation" % i.invitee.login)
+                            repo.remove_invitation(i.id)
+                            break
+                    print("  inviting %s to repository %s" % (user_name, repo_name))
+                    repo.add_to_collaborators(user, permission="maintain")
+                        
+                
 
 
 
@@ -105,6 +117,13 @@ if __name__ == "__main__":
     ]
     group = "wagriciss"
     org = "LCAS"
+
+    # debug
+    #test_user = 'CabbSir'
+    #invite_user.add_user_to_repo(test_user, org, repositories, group)
+
+    
+
     with open("users.csv", "r") as csv_file:
         reader =DictReader(csv_file)
         for row in reader:
